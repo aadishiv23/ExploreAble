@@ -11,29 +11,28 @@ const App = () => {
             <ImageBackground 
                 source={beachImage} 
                 resizeMode="cover" 
-                className='flex-1'
+                className="flex-1"
             >
                 <LinearGradient 
-                    className='flex-1' 
+                    className="flex-1"
                     colors={["rgba(0, 0, 0, 0.4)", "rgba(0, 0, 0, 0.8)"]}
                 >
-                    <SafeAreaView className='flex-1 px-1 justify-between'>
+                    <SafeAreaView className="flex-1 mx-5 my-8 justify-between">
                         <View>
-                            <Text className='text-center text-white font-bold text-4xl'>
+                            <Text className="text-center text-white font-bold text-4xl">
                                 Simple Meditation
                             </Text>
-                            <Text className='text-center text-white text-regular text-2xl mt-3'>
+                            <Text className="text-center text-white text-regular text-2xl mt-3">
                                 Simpliyfying Meditation for Everyone
                             </Text>
                         </View>
 
-
                         <View>
                             <CustomButton 
                                 onPress={() => console.log('tap')}
-                                title="GetStarted"/>
+                                title="Get Started"/>
                         </View>
-
+                        
                         <StatusBar style="light" />
                     </SafeAreaView>
                 </LinearGradient>
