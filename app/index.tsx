@@ -26,7 +26,7 @@ const App = () => {
                                 Simple Meditation
                             </Text>
                             <Text className="text-center text-white text-regular text-2xl mt-3">
-                                Simpliyfying Meditation for Everyone
+                                Simpliyfying Meditation for Nobody
                             </Text>
                         </View>
                         <View>
