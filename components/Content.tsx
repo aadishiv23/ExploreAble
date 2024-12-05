@@ -7,7 +7,7 @@ const Content = ({ children } : any ) => {
     <SafeAreaView className='flex-1 px-5 py-3'>
         {children}
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default Content
+export default Content;
