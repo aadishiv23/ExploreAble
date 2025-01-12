@@ -6,18 +6,17 @@ import { StatusBar } from 'expo-status-bar'
 import { MEDITATION_DATA } from '@/constants/MeditationData';
 import MEDITATION_IMAGES from '@/constants/meditation-images';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet ,Image} from 'react-native';
 
 const NatureMeditate = () => {
   return (
     <View className='flex-1'>
       <AppGradient colors={["#161b2e", "#0a4d4a", "#766e67"]}>
-        <View className='mb-6'>
-            <Text className='text-gray-200 mb-3 font-bold text-4xl text-left'>
-                Welcome User!
+        <View className='mb-0 w-full'>
+            <Text className='text-gray-200 mb-0 font-bold text-4xl text-left'>
+                ExporAble
             </Text>
-            <Text className='text-indigo-100 text-xl font-medium'>
-                Start your medication practice today!
-            </Text>
+            <Image source={require("@/assets/images/blank-profile-picture.png")} className='w-12 h-12 rounded-full ml-auto bottom-12 -mb-10'/>
         </View>
 
         <View>
