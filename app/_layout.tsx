@@ -7,8 +7,9 @@ export default function RootLayout() {
     return (
         // acts same as children prop in web apps, and renders index page or App componenet
         <Stack>
-            <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-            <Stack.Screen name="index" options={{headerShown: false}} />
+            <Stack.Screen name="splash" options={{ headerShown: false }} />
+            <Stack.Screen name="authentication" options={{ title: 'Sign In', headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>
     );
 }
