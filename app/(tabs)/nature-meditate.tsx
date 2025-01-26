@@ -16,8 +16,11 @@ const NatureMeditate = () => {
                 Welcome User!
             </Text>
             <Text className='text-indigo-100 text-xl font-medium'>
-                Start your medication practice today!
+                @user_name
             </Text>
+            <Pressable
+                className='h-32 w-32 rounded-full bg-white'
+            ></Pressable>
         </View>
 
         <View>
