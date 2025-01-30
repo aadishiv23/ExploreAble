@@ -1,204 +1,275 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
 import { Input, Button } from '@rneui/themed';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/lib/supabase'; // Adjust the path based on your project structure
-
+import { supabase } from '@/lib/supabase';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const Authentication = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
   const router = useRouter();
 
-  const signInWithEmail = () => {
-    setLoading(true);
-    console.log('Attempting to sign in with email:', email);
-    setTimeout(() => {
-      setLoading(false);
-      console.log('Sign-in successful for email:', email);
-      Alert.alert('Signed In', `Welcome back, ${email}`);
-    }, 1000);
-  };
+  useEffect(() => {
+    const checkAppleAuthAvailability = async () => {
+      try {
+        const isAvailable = await AppleAuthentication.isAvailableAsync();
+        setAppleAuthAvailable(isAvailable);
+      } catch (error) {
+        console.log('Apple Authentication not available:', error);
+        setAppleAuthAvailable(false);
+      }
+    };
 
-  const navigateToTabs = () => {
-    console.log('Navigating to tabs view');
-    router.replace('/(tabs)/nature-meditate');
-  };
+    if (Platform.OS === 'ios') {
+      checkAppleAuthAvailability();
+    }
+  }, []);
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign into your account</Text>
-
-      {/* Email Input */}
-      <Input
-        placeholder="Email"
-        onChangeText={(text) => {
-          setEmail(text);
-          console.log('Email input changed:', text);
-        }}
-        value={email}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        leftIcon={{ type: 'font-awesome', name: 'envelope', color: '#888' }}
-        inputStyle={styles.inputText}
-        containerStyle={styles.inputContainer}
-        inputContainerStyle={styles.inputField}
-      />
-
-      {/* Password Input */}
-      <Input
-        placeholder="Password"
-        onChangeText={(text) => {
-          setPassword(text);
-          console.log('Password input changed');
-        }}
-        value={password}
-        secureTextEntry
-        leftIcon={{ type: 'font-awesome', name: 'lock', color: '#888' }}
-        inputStyle={styles.inputText}
-        containerStyle={styles.inputContainer}
-        inputContainerStyle={styles.inputField}
-      />
-
-      {/* Sign In Button */}
-      <Button
-        title="Sign in"
-        onPress={signInWithEmail}
-        loading={loading}
-        buttonStyle={styles.signInButton}
-        titleStyle={styles.signInButtonText}
-      />
-
-      <Text style={styles.orText}>OR</Text>
-
-      {/* Sign in with Apple */}
-      {Platform.OS === 'ios' && (
-        <AppleAuthentication.AppleAuthenticationButton
-          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-          style={styles.appleButton}
-          onPress={async () => {
-    console.log('Sign in with Apple button pressed');
+  const handleProfileCheck = async (userId: string) => {
     try {
+      console.log('Checking profile for user:', userId);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('No profile found, redirecting to setup');
+          router.replace('/profileSetup');
+        } else {
+          throw error;
+        }
+      } else {
+        console.log('Profile exists, redirecting to affirmations');
+        router.replace('/(tabs)/affirmations');
+      }
+    } catch (error) {
+      console.error('Profile check error:', error);
+      Alert.alert('Error', 'Failed to check user profile. Please try again.');
+    }
+  };
+
+  const signInWithEmail = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) throw error;
+      
+      if (data?.user) {
+        console.log('User signed in:', data.user);
+        await handleProfileCheck(data.user.id);
+      }
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      Alert.alert('Sign In Error', error.message || 'Failed to sign in');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      setLoading(true);
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      console.log('Apple sign-in credential:', credential);
 
-      // Sign in via Supabase Auth.
       if (credential.identityToken) {
-        const { error, data } = await supabase.auth.signInWithIdToken({
+        const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
           token: credential.identityToken,
         });
 
-        if (error) {
-          console.error('Error signing in with Supabase:', error.message);
-          Alert.alert('Sign-In Failed', error.message);
-          return;
+        if (error) throw error;
+        
+        if (data?.user) {
+          console.log('Apple sign-in successful:', data.user);
+          await handleProfileCheck(data.user.id);
         }
-
-        console.log('User signed in successfully:', data);
-        router.replace('/(tabs)/affirmations'); // Navigate to tabs
-      } else {
-        throw new Error('No identityToken received from Apple.');
       }
-    } catch (e) {
-      if (e.code === 'ERR_REQUEST_CANCELED') {
-        console.log('Apple sign-in canceled by user');
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        console.log('Apple sign-in was canceled');
       } else {
-        console.error('Error during Apple sign-in:', e);
+        console.error('Apple sign-in error:', error);
+        Alert.alert('Authentication Error', error.message || 'Failed to sign in with Apple');
       }
+    } finally {
+      setLoading(false);
     }
-  }}
-        />
-      )}
+  };
 
-      {/* Navigate to Tabs Button */}
-      <Button
-        title="Go to Tabs"
-        onPress={navigateToTabs}
-        buttonStyle={styles.navigateToTabsButton}
-        titleStyle={styles.navigateToTabsButtonText}
-      />
-    </View>
+  return (
+    <LinearGradient 
+      colors={['#2E3192', '#1BFFFF']} 
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.logoContainer}>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoIcon}>🌐</Text>
+          </View>
+          <Text style={styles.welcomeText}>Welcome to</Text>
+          <Text style={styles.appName}>ExploreAble</Text>
+        </View>
+
+        <View style={styles.formContainer}>
+          <Input
+            placeholder="Email"
+            onChangeText={setEmail}
+            value={email}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            inputStyle={styles.inputText}
+            containerStyle={styles.inputContainer}
+            inputContainerStyle={styles.inputField}
+            disabled={loading}
+          />
+
+          <Input
+            placeholder="Password"
+            onChangeText={setPassword}
+            value={password}
+            secureTextEntry
+            inputStyle={styles.inputText}
+            containerStyle={styles.inputContainer}
+            inputContainerStyle={styles.inputField}
+            disabled={loading}
+          />
+
+          <Button
+            title="Sign in"
+            onPress={signInWithEmail}
+            loading={loading}
+            disabled={loading}
+            buttonStyle={styles.signInButton}
+            titleStyle={styles.signInButtonText}
+          />
+
+          {Platform.OS === 'ios' && appleAuthAvailable && (
+            <>
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.orText}>Or</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                cornerRadius={5}
+                style={styles.appleButton}
+                onPress={handleAppleSignIn}
+              />
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  logoContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    paddingVertical: 40,
   },
-  title: {
-    fontSize: 28,
+  logoCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  logoIcon: {
+    fontSize: 30,
+  },
+  welcomeText: {
+    color: '#fff',
+    fontSize: 18,
+    marginBottom: 5,
+  },
+  appName: {
+    color: '#fff',
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 30,
+  },
+  formContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+    paddingTop: 30,
+    paddingBottom: Platform.OS === 'ios' ? 50 : 30,
   },
   inputContainer: {
-    width: '100%',
-    marginBottom: 15,
-  },
-  inputText: {
-    fontSize: 16,
-    paddingHorizontal: 10,
+    paddingHorizontal: 0,
+    marginBottom: 10,
   },
   inputField: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    backgroundColor: '#fff',
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
     paddingHorizontal: 15,
-    height: 50,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  },
+  inputText: {
+    color: '#333',
   },
   signInButton: {
-    backgroundColor: '#FF5733',
+    backgroundColor: '#2E3192',
+    borderRadius: 8,
     paddingVertical: 12,
-    borderRadius: 4,
-    width: '100%',
-    height: 50,
+    marginTop: 10,
   },
   signInButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0E0E0',
   },
   orText: {
-    textAlign: 'center',
-    color: '#888',
-    marginVertical: 20,
-    fontSize: 16,
+    color: '#666',
+    paddingHorizontal: 10,
   },
   appleButton: {
-    width: '100%',
     height: 50,
-    borderRadius: 4, // Rounded corners for Apple button
-    overflow: 'hidden', // Ensure proper clipping of rounded edges
-  },
-  navigateToTabsButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    borderRadius: 4,
     width: '100%',
-    marginTop: 20,
-  },
-  navigateToTabsButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
   },
 });
 
