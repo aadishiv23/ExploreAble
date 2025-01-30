@@ -61,6 +61,15 @@ const TabsLayout = () => {
                     )
                 }} 
             />
+            <Tabs.Screen 
+                name="profile" 
+                options={{ 
+                    tabBarLabel: "Profile",
+                    tabBarIcon: ({color}) => (
+                        <Entypo name="open-book" size={24} color={color} />
+                    )
+                }} 
+            />
     </Tabs>
   );
 };
