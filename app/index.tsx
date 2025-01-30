@@ -12,7 +12,7 @@ const App = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 // Navigate to home or tabs if logged in
-                router.replace('/(tabs)/affirmations');
+                router.replace('/(tabs)/home');
             } else {
                 // Navigate to splash screen if not logged in
                 router.replace('/splash');

@@ -8,17 +8,26 @@ import MEDITATION_IMAGES from '@/constants/meditation-images';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet ,Image} from 'react-native';
 
+
 const NatureMeditate = () => {
   return (
-    <View className='flex-1'>
-      <AppGradient colors={["#161b2e", "#0a4d4a", "#766e67"]}>
-        <View className='mb-0 w-full'>
-            <Text className='text-gray-200 mb-0 font-bold text-4xl text-left'>
+    <View className='flex-1 overflow-auto'>
+      <StatusBar style='dark' backgroundColor='white'/>
+      <View>
+        <View className='mt-7 mb-0 w-full'>
+            <Text className='text-black mt-12 mb-2 ml-4 font-semibold text-4xl text-left'>
                 ExporAble
             </Text>
-            <Image source={require("@/assets/images/blank-profile-picture.png")} className='w-12 h-12 rounded-full ml-auto bottom-12 -mb-10'/>
         </View>
-
+        </View>
+        <LinearGradient 
+            colors={['blue', 'purple']} 
+            start={[0, 0]}
+            end={[1, 0]}
+            className='flex self-center justify-self-center items-center justify-items-center w-3/4 h-1/4 rounded-2xl'
+        > 
+            <Text className='text-white self-center justify-self-center'>Weekly Progress</Text>
+        </LinearGradient>
         <View>
             <FlatList
                 data={MEDITATION_DATA}
@@ -49,9 +58,6 @@ const NatureMeditate = () => {
                 )}
             />
         </View>
-      </AppGradient>
-
-      <StatusBar style="light"/>
     </View>
   )
 }

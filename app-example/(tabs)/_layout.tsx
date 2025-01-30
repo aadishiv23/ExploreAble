@@ -13,11 +13,11 @@ const TabsLayout = () => {
         }}
     >
             <Tabs.Screen 
-                name="home" 
+                name="nature-meditate" 
                 options={{ 
-                    tabBarLabel: "Home",
+                    tabBarLabel: "Meditate",
                     tabBarIcon: ({color}) => (
-                        <MaterialCommunityIcons name="home" size={24} color={color} />
+                        <MaterialCommunityIcons name="flower-tulip" size={24} color={color} />
                     )
                 }} 
             />
