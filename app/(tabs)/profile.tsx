@@ -2,57 +2,67 @@ import { View, Text, FlatList, Pressable, ImageBackground } from 'react-native'
 import React , {useState, useEffect} from 'react' 
 import AppGradient from '@/components/AppGradient'
 import { StatusBar } from 'expo-status-bar'
-import { supabase } from '@/utils/supabase'
-import { Session } from '@supabase/supabase-js'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { useRouter } from 'expo-router'
 import { MEDITATION_DATA } from '@/constants/MeditationData';
 import MEDITATION_IMAGES from '@/constants/meditation-images';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Alert } from 'react-native';
 
 export default function Profile() {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    //TODO change to empty quote when we get authentication working
     const [name, setName] = useState('Full Name')
-    const [disablity, setDisability] = useState('wheelchair user')
+    const [disability, setDisability] = useState('wheelchair user')
     const [age, setAge] = useState(0)
     const [pfp, setPfp] = useState('')
         
-    getProfile()
-    
+    useEffect(() => {
+        getProfile()
+    }, [])
 
     async function getProfile(){
         try {
-            
             console.log('Checking user session...');
             const { data, error: sessionError } = await supabase.auth.getSession();
-            console.log("Data session", data)
+            
+            if (sessionError) {
+                console.error('Session error:', sessionError);
+                router.replace('/splash');
+                return;
+            }
+
+            if (!data.session?.user) {
+                console.log('No active session, redirecting to splash');
+                router.replace('/splash');
+                return;
+            }
+
             const {data: profile, error, status} = await supabase
                 .from("profiles")
                 .select("name, age, disability, pfpUrl")
-                .eq("id", data?.session?.user.id)
+                .eq("id", data.session.user.id)
                 .single()
+
             if (error && status !== 406){
                 console.log("error");
                 throw error
             }
-            console.log("Profile data:", profile);
+
             if (profile) {
                 setName(profile.name)
                 setAge(profile.age)
-                setDisability(profile.disability)
+                setDisability(profile.disablity)
                 setPfp(profile.pfpUrl)
             }
         } catch (error) {
+            console.error('Profile error:', error);
             if (error instanceof Error) {
-              alert(error.message)
+              Alert.alert('Error', error.message)
             }
         } finally {
             setLoading(false)
         }
-
-
     }
 
   return (
@@ -73,7 +83,7 @@ export default function Profile() {
                 Age: {age}
             </Text>
             <Text className='text-black mb-3 font-bold text-xl text-center'>
-                Disability: {disablity}
+                Disability: {disability}
             </Text>
         </View>
 
