@@ -1,17 +1,17 @@
 import React from "react";
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from "react-native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { TabBarIconProps } from '@react-navigation/bottom-tabs';
 
-const activities = [
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+const activities: { id: string; title: string; duration: string; participants: number; icon: IoniconName; color: string }[] = [
   { id: "1", title: "Morning Run", duration: "30 min", participants: 5, icon: "walk", color: "#A0C4FF" },
-  { id: "2", title: "Group Yoga", duration: "45 min", participants: 8, icon: "fitness", color: "#DAB6FC" },
+  { id: "2", title: "Group Hike", duration: "45 min", participants: 8, icon: "fitness", color: "#DAB6FC" },
   { id: "3", title: "Gym Workout", duration: "60 min", participants: 2, icon: "barbell", color: "#FFC6C6" },
 ];
 
-const Filters = ["All", "Running", "Cycling"};
+const Filters = ["All", "Running", "Cycling", "WeightLifting"];
 
 const ActivitiesScreen = () => {
   return (
@@ -41,52 +41,6 @@ const ActivitiesScreen = () => {
     </View>
   );
 };
-
-const Tab = createBottomTabNavigator();
-
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Tab.Navigator screenOptions={{ tabBarShowLabel: false, headerShown: false }}>
-        <Tab.Screen
-          name="Home"
-          component={ActivitiesScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
-          }}
-        />
-        <Tab.Screen
-          name="Search"
-          component={ActivitiesScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <Ionicons name="search" size={size} color={color} />,
-          }}
-        />
-        <Tab.Screen
-          name="Activities"
-          component={ActivitiesScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <Ionicons name="bicycle" size={size} color={color} />,
-          }}
-        />
-        <Tab.Screen
-          name="Community"
-          component={ActivitiesScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
-          }}
-        />
-        <Tab.Screen
-          name="Profile"
-          component={ActivitiesScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
-  );
-}
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "white" },
