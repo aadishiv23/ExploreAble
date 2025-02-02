@@ -15,6 +15,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Alert } from 'react-native';
 
 interface ActivityLog {
   id: string;
