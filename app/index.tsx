@@ -47,8 +47,8 @@ const App = () => {
                 }
 
                 if (profile) {
-                    console.log('Profile exists, redirecting to affirmations');
-                    router.replace('/(tabs)/affirmations');
+                    console.log('Profile exists, redirecting to home');
+                    router.replace('/(tabs)/home');
                 } else {
                     console.log('No profile found, redirecting to setup');
                     router.replace('/profileSetup');

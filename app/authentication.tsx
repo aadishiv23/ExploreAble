@@ -46,8 +46,8 @@ const Authentication = () => {
           throw error;
         }
       } else {
-        console.log('Profile exists, redirecting to affirmations');
-        router.replace('/(tabs)/affirmations');
+        console.log('Profile exists, redirecting to home');
+        router.replace('/(tabs)/home');
       }
     } catch (error) {
       console.error('Profile check error:', error);
@@ -174,7 +174,7 @@ const Authentication = () => {
 
               <AppleAuthentication.AppleAuthenticationButton
                 buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
                 cornerRadius={5}
                 style={styles.appleButton}
                 onPress={handleAppleSignIn}
