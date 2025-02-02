@@ -31,7 +31,7 @@ const App = () => {
                     .from('profiles')
                     .select()
                     .eq('id', userId)
-                    .single();
+                    .single();  
 
                 console.log('Profile check result:', { profile, error: profileError });
 
