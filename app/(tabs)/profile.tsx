@@ -10,7 +10,7 @@ import { MEDITATION_DATA } from '@/constants/MeditationData';
 import MEDITATION_IMAGES from '@/constants/meditation-images';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function Profile({ session }: { session: Session }) {
+export default function Profile() {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     //TODO change to empty quote when we get authentication working
@@ -19,30 +19,30 @@ export default function Profile({ session }: { session: Session }) {
     const [age, setAge] = useState(0)
     const [pfp, setPfp] = useState('')
         
-
-    useEffect(() => {
-        if (session) getProfile()
-    }, [session])
+    getProfile()
+    
 
     async function getProfile(){
         try {
-            setLoading(true);
-            if (!session?.user) throw new Error("No user on the session");
-
-            const {data, error, status} = await supabase
+            
+            console.log('Checking user session...');
+            const { data, error: sessionError } = await supabase.auth.getSession();
+            console.log("Data session", data)
+            const {data: profile, error, status} = await supabase
                 .from("profiles")
                 .select("name, age, disability, pfpUrl")
-                .eq("id", session?.user.id)
+                .eq("id", data?.session?.user.id)
                 .single()
             if (error && status !== 406){
+                console.log("error");
                 throw error
             }
-
-            if (data) {
-                setName(data.name)
-                setAge(data.age)
-                setDisability(data.disability)
-                setPfp(data.pfpUrl)
+            console.log("Profile data:", profile);
+            if (profile) {
+                setName(profile.name)
+                setAge(profile.age)
+                setDisability(profile.disability)
+                setPfp(profile.pfpUrl)
             }
         } catch (error) {
             if (error instanceof Error) {
@@ -82,7 +82,7 @@ export default function Profile({ session }: { session: Session }) {
             onPress={() => router.push("/editprofile")}
             className="h-48 my-3 rounded-md overflow-hidden"
             >
-                <Text className='text-gray-100 text-3xl font-bold text-center'>Edit Profile</Text>
+                <Text className='text-black text-3xl font-bold text-center'>Edit Profile</Text>
             </Pressable>
         </View>
       </AppGradient>

@@ -1,5 +1,6 @@
 import { View, Text, TextInput, FlatList, Pressable, ImageBackground } from 'react-native'
 import React , {useState, useEffect} from 'react' 
+import { Button, Input } from '@rneui/themed'
 import AppGradient from '@/components/AppGradient'
 import { StatusBar } from 'expo-status-bar'
 import { supabase } from '@/utils/supabase'
@@ -14,7 +15,7 @@ export default function editProfile({ session }: { session: Session }) {
     const [loading, setLoading] = useState(true)
     const [text, setText] = useState("");
     //TODO change to empty quote when we get authentication working
-    const [name, setName] = useState('Full Name')
+    const [name, setName] = useState('')
     const [disablity, setDisability] = useState('wheelchair user')
     const [age, setAge] = useState(0)
     const [pfp, setPfp] = useState('')
@@ -63,12 +64,7 @@ export default function editProfile({ session }: { session: Session }) {
               <View className='w-1/5 bg-blue-500 justify-center'>    {/*Label*/}
                 <Text className='mx-2'> Name:</Text>               
               </View>
-              <TextInput
-                className="asdf"
-                placeholder={name}
-                value={text}
-                onChangeText={setText}
-              />
+              <Input label="" value={name || ''} onChangeText={(text) => setName(text)} />
             </View>
             <View className='flex-row gap-2 h-12'> {/*Row*/}
               <View className='w-1/5 bg-blue-500 justify-center'>    {/*Label*/}
