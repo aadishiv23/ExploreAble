@@ -16,6 +16,14 @@ export default function RootLayout() {
                 }} 
             />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen 
+                name="searchProfileView" 
+                options={{
+                    title: 'Profile',
+                    headerBackTitle: 'Back',
+                    presentation: 'card',
+                }}
+            />
         </Stack>
     );
 }
