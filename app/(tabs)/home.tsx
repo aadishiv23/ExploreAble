@@ -101,11 +101,13 @@ const AllActivitiesCard = ({ activity, onPress }: { activity: string; onPress: (
 
   return (
     <Pressable onPress={handlePress} style={styles.allActivitiesCard}>
-      <View style={styles.iconRectangle}>
-        <View style={styles.iconCircle}>
-          <Ionicons name={getActivityIcon(activity)} size={24} color="#007AFF" />
+      <View style={styles.allActivitiesCardContent}>
+        <View style={styles.iconRectangle}>
+          <View style={styles.iconCircle}>
+            <Ionicons name={getActivityIcon(activity)} size={24} color="#007AFF" />
+          </View>
         </View>
-        <Text style={[styles.activityLabel, { marginLeft: 15 }]}>{activity}</Text>
+        <Text style={styles.activityLabel}>{activity}</Text>
       </View>
     </Pressable>
   );
@@ -305,6 +307,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
+  },
+  allActivitiesCardContent: {
+    alignItems: 'center',
   },
 });
 
