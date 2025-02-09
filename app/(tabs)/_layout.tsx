@@ -59,7 +59,7 @@ const TabsLayout = () => {
                     tabBarIcon: ({color}) => (
                         <Entypo name="open-book" size={24} color={color} />
                     )
-                }} 
+                }}
             />
     </Tabs>
   );

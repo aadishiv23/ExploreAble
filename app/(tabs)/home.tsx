@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions } from 'react
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AppGradient from '@/components/AppGradient';
+import { router } from 'expo-router';
 
 const ACTIVITY_OPTIONS = ["Running", "Walking", "Cycling"];
 
@@ -50,7 +51,7 @@ const DailyUpdateCard = () => {
   );
 };
 
-const QuickStartCard = ({ activity, onPress }: { activity: string; onPress: () => void }) => {
+const QuickStartCard = ({ activity}: { activity: string; onPress: () => void }) => {
   const getActivityIcon = (activity: string) => {
     switch (activity) {
       case 'Running':
@@ -64,13 +65,47 @@ const QuickStartCard = ({ activity, onPress }: { activity: string; onPress: () =
     }
   };
 
+  const handlePress = () => {
+    router.push(`/(tabs)/configure/${activity.toLowerCase()}` as any);
+  };
+
   return (
-    <Pressable onPress={onPress} style={styles.quickStartCard}>
+    <Pressable onPress={handlePress} style={styles.quickStartCard}>
       <View style={styles.quickStartCardContent}>
         <View style={styles.iconCircle}>
           <Ionicons name={getActivityIcon(activity)} size={24} color="#007AFF" />
         </View>
         <Text style={styles.activityLabel}>{activity}</Text>
+      </View>
+    </Pressable>
+  );
+};
+
+const AllActivitiesCard = ({ activity, onPress }: { activity: string; onPress: () => void }) => {
+  const getActivityIcon = (activity: string) => {
+    switch (activity) {
+      case 'Running':
+        return 'fitness';
+      case 'Walking':
+        return 'walk';
+      case 'Cycling':
+        return 'bicycle';
+      default:
+        return 'walk';
+    }
+  };
+
+  const handlePress = () => {
+    router.push(`/(tabs)/configure/${activity.toLowerCase()}` as any);
+  };
+
+  return (
+    <Pressable onPress={handlePress} style={styles.allActivitiesCard}>
+      <View style={styles.iconRectangle}>
+        <View style={styles.iconCircle}>
+          <Ionicons name={getActivityIcon(activity)} size={24} color="#007AFF" />
+        </View>
+        <Text style={[styles.activityLabel, { marginLeft: 15 }]}>{activity}</Text>
       </View>
     </Pressable>
   );
@@ -104,6 +139,17 @@ const HomeScreen = () => {
               />
             ))}
           </ScrollView>
+        </View>
+
+        <View style={styles.allActivitiesSection}>
+          <Text style={styles.sectionTitle}>All Activities</Text>
+            {ACTIVITY_OPTIONS.map((activity) => (
+              <AllActivitiesCard 
+                key={activity} 
+                activity={activity}
+                onPress={() => handleActivitySelect(activity)} 
+              />
+            ))}
         </View>
       </ScrollView>
     </View>
@@ -243,6 +289,22 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 14,
     fontWeight: '500',
+  },
+  allActivitiesSection: {
+    marginTop: 20,
+  },  
+  allActivitiesCard: {  
+    margin: 16,
+    borderRadius: 20,
+  },
+  iconRectangle: {
+    width: '100%',
+    height: 80,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,122,255,0.1)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
   },
 });
 
