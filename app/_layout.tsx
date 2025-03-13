@@ -24,6 +24,14 @@ export default function RootLayout() {
                     presentation: 'card',
                 }}
             />
+            <Stack.Screen 
+                name="createActivity" 
+                options={{
+                    title: 'Create Activity',
+                    headerBackTitle: 'Back',
+                    presentation: 'card',
+                }}
+            />
         </Stack>
     );
 }

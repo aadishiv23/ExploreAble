@@ -24,6 +24,16 @@ interface User {
   gender: string;
 }
 
+interface Activity {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  created_by: string;
+  is_public: boolean;
+  created_at: string;
+}
+
 type FriendshipStatus = 'not_friends' | 'pending' | 'friends';
 
 interface FriendshipStatuses {
@@ -35,7 +45,8 @@ const MAX_RECENT_SEARCHES = 5;
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [userResults, setUserResults] = useState<User[]>([]);
+  const [activityResults, setActivityResults] = useState<Activity[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [friendshipStatuses, setFriendshipStatuses] = useState<FriendshipStatuses>({});
@@ -48,10 +59,10 @@ const SearchScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (searchResults.length > 0) {
+    if (userResults.length > 0) {
       fetchFriendshipStatuses();
     }
-  }, [searchResults]);
+  }, [userResults]);
 
   const loadRecentSearches = async () => {
     try {
@@ -84,7 +95,7 @@ const SearchScreen = () => {
       if (!user) return;
 
       const statuses: FriendshipStatuses = {};
-      for (const result of searchResults) {
+      for (const result of userResults) {
         const { data, error } = await supabase.rpc('check_friendship_status', {
           user1: user.id,
           user2: result.id
@@ -169,22 +180,33 @@ const SearchScreen = () => {
     if (text.trim()) {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        // Search for users
+        const { data: userData, error: userError } = await supabase
           .from('profiles')
           .select('id, name, age, gender')
           .ilike('name', `%${text}%`)
-          .limit(10);
+          .limit(5);
 
-        if (error) throw error;
-        setSearchResults(data || []);
+        if (userError) throw userError;
+        setUserResults(userData || []);
+
+        // Search for activities
+        const { data: activityData, error: activityError } = await supabase.rpc('search_activities', {
+          search_query: text
+        });
+
+        if (activityError) throw activityError;
+        setActivityResults(activityData || []);
       } catch (error) {
         console.error('Search error:', error);
-        setSearchResults([]);
+        setUserResults([]);
+        setActivityResults([]);
       } finally {
         setLoading(false);
       }
     } else {
-      setSearchResults([]);
+      setUserResults([]);
+      setActivityResults([]);
     }
   };
 
@@ -196,7 +218,8 @@ const SearchScreen = () => {
 
   const clearSearch = () => {
     setSearchQuery('');
-    setSearchResults([]);
+    setUserResults([]);
+    setActivityResults([]);
   };
 
   const handleUserSelect = async (user: User) => {
@@ -293,7 +316,7 @@ const SearchScreen = () => {
         {loading && <ActivityIndicator size="large" color="#007AFF" style={styles.loadingIndicator} />}
 
         {/* No Matches Found */}
-        {!loading && searchQuery && searchResults.length === 0 && (
+        {!loading && searchQuery && userResults.length === 0 && activityResults.length === 0 && (
           <Text style={styles.noMatchesText}>No matches found</Text>
         )}
 
@@ -323,37 +346,73 @@ const SearchScreen = () => {
         )}
 
         {/* Search Results */}
-        {searchQuery && searchResults.map((user) => (
-          <TouchableOpacity
-            key={user.id}
-            style={styles.userCard}
-            onPress={() => handleUserSelect(user)}
-          >
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user.name}</Text>
-              <Text style={styles.userAge}>{user.age} years old</Text>
-            </View>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity 
-                style={getFriendButtonStyle(user.id)}
-                onPress={() => handleFriendRequest(user.id)}
-                disabled={friendshipStatuses[user.id] === 'friends' || friendshipStatuses[user.id] === 'pending'}
-              >
-                <Text style={getFriendButtonTextStyle(user.id)}>
-                  {getFriendButtonText(user.id)}
-                </Text>
-              </TouchableOpacity>
-              {friendshipStatuses[user.id] === 'pending' && (
-                <TouchableOpacity 
-                  style={styles.cancelButton}
-                  onPress={() => handleCancelRequest(user.id)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </TouchableOpacity>
-        ))}
+        {searchQuery && (
+          <>
+            {/* Users Section */}
+            {userResults.length > 0 && (
+              <>
+                <Text style={styles.resultsSectionTitle}>People</Text>
+                {userResults.map((user) => (
+                  <TouchableOpacity
+                    key={user.id}
+                    style={styles.userCard}
+                    onPress={() => handleUserSelect(user)}
+                  >
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userName}>{user.name}</Text>
+                      <Text style={styles.userAge}>{user.age} years old</Text>
+                    </View>
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity 
+                        style={getFriendButtonStyle(user.id)}
+                        onPress={() => handleFriendRequest(user.id)}
+                        disabled={friendshipStatuses[user.id] === 'friends' || friendshipStatuses[user.id] === 'pending'}
+                      >
+                        <Text style={getFriendButtonTextStyle(user.id)}>
+                          {getFriendButtonText(user.id)}
+                        </Text>
+                      </TouchableOpacity>
+                      {friendshipStatuses[user.id] === 'pending' && (
+                        <TouchableOpacity 
+                          style={styles.cancelButton}
+                          onPress={() => handleCancelRequest(user.id)}
+                        >
+                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            {/* Activities Section */}
+            {activityResults.length > 0 && (
+              <>
+                <Text style={styles.resultsSectionTitle}>Activities</Text>
+                {activityResults.map((activity) => (
+                  <TouchableOpacity
+                    key={activity.id}
+                    style={styles.activityCard}
+                    onPress={() => router.push(`/activity/${activity.id}`)}
+                  >
+                    <View style={styles.activityInfo}>
+                      <Text style={styles.activityName}>{activity.name}</Text>
+                      <Text style={styles.activityDescription} numberOfLines={2}>
+                        {activity.description}
+                      </Text>
+                      <View style={styles.activityMeta}>
+                        <View style={styles.categoryBadge}>
+                          <Text style={styles.categoryText}>{activity.category}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -489,6 +548,50 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     fontSize: 14,
     fontWeight: '600',
+  },
+  resultsSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 20,
+    marginBottom: 12,
+    color: '#333',
+  },
+  activityCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 4,
+  },
+  activityDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  activityMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryBadge: {
+    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  categoryText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
   },
 });
 
