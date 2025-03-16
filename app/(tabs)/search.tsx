@@ -394,7 +394,7 @@ const SearchScreen = () => {
                   <TouchableOpacity
                     key={activity.id}
                     style={styles.activityCard}
-                    onPress={() => router.push(`/activity/${activity.id}`)}
+                    onPress={() => router.push(`/activityView?id=${activity.id}`)}
                   >
                     <View style={styles.activityInfo}>
                       <Text style={styles.activityName}>{activity.name}</Text>

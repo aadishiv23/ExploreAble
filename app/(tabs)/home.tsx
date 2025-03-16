@@ -1,10 +1,74 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import AppGradient from '@/components/AppGradient';
 
-const ACTIVITY_OPTIONS = ["Running", "Walking", "Cycling"];
+interface Event {
+  id: string;
+  title: string;
+  location: string;
+  date: string;
+  participants: number;
+  accessibility_features: string[];
+  activity_id: string;
+  created_by: string;
+}
+
+const ACTIVITY_OPTIONS = [
+  { 
+    id: 'running',
+    name: "Running",
+    icon: 'fitness' as const,
+    color: '#FF6B6B',
+    gradient: ['#FF6B6B', '#EE5253'] as [string, string]
+  },
+  { 
+    id: 'walking',
+    name: "Walking",
+    icon: 'walk' as const,
+    color: '#4CAF50',
+    gradient: ['#4CAF50', '#388E3C'] as [string, string]
+  },
+  { 
+    id: 'cycling',
+    name: "Cycling",
+    icon: 'bicycle' as const,
+    color: '#2196F3',
+    gradient: ['#2196F3', '#1976D2'] as [string, string]
+  }
+];
+
+const EventCard = ({ event, onPress }: { event: Event, onPress: () => void }) => {
+  const eventDate = new Date(event.date);
+  const month = eventDate.toLocaleDateString('en-US', { month: 'short' });
+  const day = eventDate.getDate();
+
+  return (
+    <Pressable style={styles.eventCard} onPress={onPress}>
+      <View style={styles.dateContainer}>
+        <Text style={styles.monthText}>{month}</Text>
+        <Text style={styles.dayText}>{day}</Text>
+      </View>
+      <View style={styles.eventInfo}>
+        <Text style={styles.eventCardTitle}>{event.title}</Text>
+        <View style={styles.eventCardDetail}>
+          <Ionicons name="location-outline" size={16} color="#666" />
+          <Text style={styles.eventCardDetailText}>{event.location}</Text>
+        </View>
+        <View style={styles.accessibilityTags}>
+          {event.accessibility_features.map((feature, index) => (
+            <View key={index} style={styles.featureTag}>
+              <Text style={styles.featureTagText}>{feature}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+      <Ionicons name="chevron-forward" size={24} color="#ccc" />
+    </Pressable>
+  );
+};
 
 const DailyUpdateCard = () => {
   return (
@@ -50,38 +114,74 @@ const DailyUpdateCard = () => {
   );
 };
 
-const QuickStartCard = ({ activity, onPress }: { activity: string; onPress: () => void }) => {
-  const getActivityIcon = (activity: string) => {
-    switch (activity) {
-      case 'Running':
-        return 'fitness';
-      case 'Walking':
-        return 'walk';
-      case 'Cycling':
-        return 'bicycle';
-      default:
-        return 'walk';
-    }
-  };
-
+const QuickStartCard = ({ activity, onPress }: { activity: typeof ACTIVITY_OPTIONS[0]; onPress: () => void }) => {
   return (
-    <Pressable onPress={onPress} style={styles.quickStartCard}>
-      <View style={styles.quickStartCardContent}>
-        <View style={styles.iconCircle}>
-          <Ionicons name={getActivityIcon(activity)} size={24} color="#007AFF" />
-        </View>
-        <Text style={styles.activityLabel}>{activity}</Text>
+    <TouchableOpacity 
+      style={styles.quickStartCard}
+      onPress={onPress}
+    >
+      <View style={[styles.iconCircle, { backgroundColor: activity.color }]}>
+        <Ionicons name={activity.icon} size={24} color="#fff" />
       </View>
-    </Pressable>
+      <Text style={styles.activityLabel}>{activity.name}</Text>
+    </TouchableOpacity>
   );
 };
 
 const HomeScreen = () => {
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const router = useRouter();
 
-  const handleActivitySelect = (activity: string) => {
-    setSelectedActivity(activity);
-    console.log('Selected activity:', activity);
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      // In a real app, this would fetch from the database
+      // For demo purposes, we'll use sample data
+      const sampleEvents: Event[] = [
+        {
+          id: '1',
+          title: 'Adaptive Hiking Meetup',
+          location: 'Green Hill Park',
+          date: '2025-02-23T10:00:00Z',
+          participants: 12,
+          accessibility_features: ['Wheelchair Ramp', 'Paved Trails'],
+          activity_id: '123',
+          created_by: 'user1'
+        },
+        {
+          id: '2',
+          title: 'Kayaking for All',
+          location: 'River Bend',
+          date: '2025-02-24T09:00:00Z',
+          participants: 8,
+          accessibility_features: ['Life Jackets', 'Assistance Available'],
+          activity_id: '124',
+          created_by: 'user2'
+        }
+      ];
+      
+      setEvents(sampleEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  const handleActivitySelect = (activity: typeof ACTIVITY_OPTIONS[0]) => {
+    router.push({
+      pathname: '/activitiesByType',
+      params: { 
+        type: activity.id,
+        name: activity.name
+      }
+    });
+  };
+
+  const handleEventPress = (eventId: string) => {
+    router.push(`/eventDetail?id=${eventId}`);
   };
 
   return (
@@ -91,20 +191,30 @@ const HomeScreen = () => {
 
         <View style={styles.quickStartSection}>
           <Text style={styles.sectionTitle}>Quick Start</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickStartScrollContent}
-          >
+          <View style={styles.quickStartGrid}>
             {ACTIVITY_OPTIONS.map((activity) => (
               <QuickStartCard
-                key={activity}
+                key={activity.id}
                 activity={activity}
                 onPress={() => handleActivitySelect(activity)}
               />
             ))}
-          </ScrollView>
+          </View>
         </View>
+
+        {/* Upcoming Events Section */}
+        {events.length > 0 && (
+          <View style={styles.eventsSection}>
+            <Text style={styles.sectionTitle}>Upcoming Events</Text>
+            {events.map((event) => (
+              <EventCard 
+                key={event.id} 
+                event={event} 
+                onPress={() => handleEventPress(event.id)} 
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -212,6 +322,7 @@ const styles = StyleSheet.create({
   },
   quickStartSection: {
     marginTop: 20,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 20,
@@ -220,29 +331,111 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 15,
   },
-  quickStartScrollContent: {
-    paddingHorizontal: 16,
+  quickStartGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   quickStartCard: {
-    width: 100,
-    marginRight: 15,
-  },
-  quickStartCardContent: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(0,122,255,0.1)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  activityLabel: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  eventsSection: {
+    marginTop: 20,
+    paddingHorizontal: 16,
+  },
+  eventCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  dateContainer: {
+    width: 50,
+    height: 60,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  monthText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  dayText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  eventInfo: {
+    flex: 1,
+  },
+  eventCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  eventCardDetail: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  activityLabel: {
-    color: '#000',
+  eventCardDetailText: {
     fontSize: 14,
-    fontWeight: '500',
+    color: '#666',
+    marginLeft: 4,
+  },
+  accessibilityTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  featureTag: {
+    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  featureTagText: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 

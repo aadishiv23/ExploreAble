@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Image } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
@@ -11,6 +11,29 @@ interface LogActivityFormData {
   duration: string;
   distance: string;
   notes: string;
+  selectedFriends: string[];
+}
+
+interface Friend {
+  id: string;
+  name: string;
+  full_name: string;
+  avatar_url: string | null;
+}
+
+interface FriendshipResponse {
+  user1: {
+    id: string;
+    name: string;
+    full_name: string;
+    avatar_url: string | null;
+  };
+  user2: {
+    id: string;
+    name: string;
+    full_name: string;
+    avatar_url: string | null;
+  };
 }
 
 const LogActivityScreen = () => {
@@ -25,10 +48,13 @@ const LogActivityScreen = () => {
     duration: '',
     distance: '',
     notes: '',
+    selectedFriends: [],
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -49,17 +75,64 @@ const LogActivityScreen = () => {
     return true;
   };
 
+  useEffect(() => {
+    fetchFriends();
+  }, []);
+
+  const fetchFriends = async () => {
+    setLoadingFriends(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('friendships')
+        .select(`
+          user2:user2_id (id, name, full_name, avatar_url),
+          user1:user1_id (id, name, full_name, avatar_url)
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .eq('status', 'accepted')
+        .returns<FriendshipResponse[]>();
+
+      if (error) throw error;
+
+      const friendsList: Friend[] = data.map(friendship => {
+        const friend = friendship.user1.id === user.id ? friendship.user2 : friendship.user1;
+        return {
+          id: friend.id,
+          name: friend.name,
+          full_name: friend.full_name,
+          avatar_url: friend.avatar_url
+        };
+      });
+
+      setFriends(friendsList);
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+    } finally {
+      setLoadingFriends(false);
+    }
+  };
+
+  const toggleFriendSelection = (friendId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedFriends: prev.selectedFriends.includes(friendId)
+        ? prev.selectedFriends.filter(id => id !== friendId)
+        : [...prev.selectedFriends, friendId]
+    }));
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) throw new Error('User not authenticated');
 
-      // Format the data for insertion
+      // Insert activity log
       const logData = {
         activity_id: activityId,
         user_id: user.id,
@@ -67,24 +140,31 @@ const LogActivityScreen = () => {
         duration: parseInt(formData.duration, 10) || 0,
         distance: parseFloat(formData.distance) || null,
         notes: formData.notes || null,
-        // Add created_at timestamp to satisfy RLS policies
         created_at: new Date().toISOString(),
       };
 
-      // Use the service role key to bypass RLS policies
-      // First check if the table has RLS enabled
-      const { error: insertError } = await supabase
+      const { data: activityLog, error: logError } = await supabase
         .from('activity_logs')
-        .insert(logData);
+        .insert(logData)
+        .select()
+        .single();
 
-      if (insertError) {
-        console.log('Attempting alternative insertion method...');
-        // If there's an RLS error, try using a stored procedure or function
-        // that has been granted the appropriate permissions
-        const { error: rpcError } = await supabase
-          .rpc('insert_activity_log', logData);
+      if (logError) throw logError;
 
-        if (rpcError) throw rpcError;
+      // Create friend invites
+      if (formData.selectedFriends.length > 0) {
+        const invites = formData.selectedFriends.map(friendId => ({
+          sender_id: user.id,
+          receiver_id: friendId,
+          activity_log_id: activityLog.id,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error: inviteError } = await supabase
+          .from('friend_invites')
+          .insert(invites);
+
+        if (inviteError) throw inviteError;
       }
 
       Alert.alert(
@@ -92,13 +172,9 @@ const LogActivityScreen = () => {
         'Activity logged successfully!',
         [{ text: 'OK', onPress: () => router.back() }]
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error logging activity:', error);
-      Alert.alert(
-        'Error',
-        'Unable to log activity due to permission restrictions. Please contact support for assistance.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Error', 'Failed to log activity. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -200,6 +276,46 @@ const LogActivityScreen = () => {
                 numberOfLines={4}
                 textAlignVertical="top"
               />
+            </View>
+
+            {/* Friends Section */}
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Invite Friends</Text>
+              {loadingFriends ? (
+                <ActivityIndicator size="small" color="#4B7BF5" />
+              ) : friends.length > 0 ? (
+                <View style={styles.friendsContainer}>
+                  {friends.map(friend => (
+                    <TouchableOpacity
+                      key={friend.id}
+                      style={[
+                        styles.friendItem,
+                        formData.selectedFriends.includes(friend.id) && styles.friendItemSelected
+                      ]}
+                      onPress={() => toggleFriendSelection(friend.id)}
+                    >
+                      <View style={styles.friendAvatar}>
+                        {friend.avatar_url ? (
+                          <Image
+                            source={{ uri: friend.avatar_url }}
+                            style={styles.avatarImage}
+                          />
+                        ) : (
+                          <Text style={styles.avatarText}>
+                            {friend.full_name.charAt(0)}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.friendName}>{friend.full_name}</Text>
+                      {formData.selectedFriends.includes(friend.id) && (
+                        <Ionicons name="checkmark-circle" size={20} color="#4B7BF5" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.noFriendsText}>No friends to invite</Text>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -323,6 +439,54 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  friendsContainer: {
+    marginTop: 8,
+  },
+  friendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  friendItemSelected: {
+    backgroundColor: '#E8F1FF',
+    borderColor: '#4B7BF5',
+  },
+  friendAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#4B7BF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  friendName: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  noFriendsText: {
+    fontSize: 16,
+    color: '#666',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 8,
   },
 });
 

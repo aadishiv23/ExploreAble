@@ -184,21 +184,24 @@ const ActivitiesScreen = () => {
               />
             }
           >
-            {activities.length > 0 ? (
-              activities.map((activity) => (
-                <ActivityCard key={activity.id} activity={activity} />
-              ))
-            ) : (
-              <View style={styles.emptyStateContainer}>
-                <Ionicons name="fitness-outline" size={64} color="#CCCCCC" />
-                <Text style={styles.emptyStateTitle}>No Activities Found</Text>
-                <Text style={styles.emptyStateText}>
-                  {selectedCategory === 'All' 
-                    ? 'There are no activities available yet. Create one to get started!' 
-                    : `No ${selectedCategory} activities found. Try selecting a different category.`}
-                </Text>
-              </View>
-            )}
+            {/* Activities Section */}
+            <View style={styles.sectionContainer}>
+              {activities.length > 0 ? (
+                activities.map((activity) => (
+                  <ActivityCard key={activity.id} activity={activity} />
+                ))
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Ionicons name="fitness-outline" size={64} color="#CCCCCC" />
+                  <Text style={styles.emptyStateTitle}>No Activities Found</Text>
+                  <Text style={styles.emptyStateText}>
+                    {selectedCategory === 'All' 
+                      ? 'There are no activities available yet. Create one to get started!' 
+                      : `No ${selectedCategory} activities found. Try selecting a different category.`}
+                  </Text>
+                </View>
+              )}
+            </View>
           </ScrollView>
         )}
       </View>
@@ -268,6 +271,9 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 24,
   },
+  sectionContainer: {
+    marginBottom: 24,
+  },
   activityCard: {
     flexDirection: 'row',
     padding: 16,
@@ -281,6 +287,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    marginBottom: 12,
   },
   activityCardPressed: {
     backgroundColor: '#F0F0F0',

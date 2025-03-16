@@ -36,6 +36,16 @@ const TabsLayout = () => {
             />
 
             <Tabs.Screen
+                name="activities"
+                options={{
+                    tabBarLabel: "Activities",
+                    tabBarIcon: ({ color }) => (
+                        <Ionicons name="fitness" size={24} color={color} />
+                    )
+                }}
+            />
+
+            <Tabs.Screen
                 name="search"
                 options={{
                     tabBarLabel: "Search",
@@ -44,23 +54,13 @@ const TabsLayout = () => {
                     )
                 }}
             />
-
+            
             <Tabs.Screen
-                name="nature-meditate"
+                name="community"
                 options={{
-                    tabBarLabel: "Meditate",
+                    tabBarLabel: "Community",
                     tabBarIcon: ({ color }) => (
-                        <MaterialCommunityIcons name="flower-tulip" size={24} color={color} />
-                    )
-                }}
-            />
-
-            <Tabs.Screen
-                name="affirmations"
-                options={{
-                    tabBarLabel: "Affirmations",
-                    tabBarIcon: ({ color }) => (
-                        <Entypo name="open-book" size={24} color={color} />
+                        <Ionicons name="people" size={24} color={color} />
                     )
                 }}
             />

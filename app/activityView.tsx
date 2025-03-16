@@ -157,123 +157,145 @@ const ActivityView = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <Stack.Screen 
         options={{
-          title: activity.name,
+          title: '',
+          headerTransparent: true,
+          headerTintColor: 'white',
           headerShadowVisible: false,
-          animation: 'slide_from_right',
+          headerBackground: () => (
+            <View style={{ 
+              flex: 1, 
+              backgroundColor: 'rgba(0,0,0,0.2)',
+            }} />
+          ),
         }} 
       />
       
       <ScrollView 
         style={styles.scrollView}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Section */}
         <View style={styles.headerContainer}>
           <LinearGradient
             colors={getGradientColors(activity.category)}
             style={styles.headerGradient}
           >
-            <View style={styles.headerIconContainer}>
-              <Ionicons 
-                name={getActivityIcon(activity.category)} 
-                size={64} 
-                color="rgba(255,255,255,0.9)" 
-              />
-            </View>
             <View style={styles.headerContent}>
-              <Text style={styles.headerCategory}>{activity.category}</Text>
+              <View style={styles.headerIconContainer}>
+                <Ionicons 
+                  name={getActivityIcon(activity.category)} 
+                  size={64} 
+                  color="rgba(255,255,255,0.9)" 
+                />
+              </View>
+              <Text style={styles.headerTitle}>{activity.name}</Text>
+              <View style={styles.categoryContainer}>
+                <Ionicons 
+                  name="pricetag-outline" 
+                  size={16} 
+                  color="rgba(255,255,255,0.9)" 
+                />
+                <Text style={styles.headerCategory}>{activity.category}</Text>
+              </View>
             </View>
           </LinearGradient>
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.primaryButton]}
-            onPress={() => router.push({
-              pathname: '/logActivity',
-              params: { id: activity.id, name: activity.name }
-            })}
-          >
-            <Ionicons name="add-circle-outline" size={24} color="white" />
-            <Text style={styles.actionButtonText}>Log Activity</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.secondaryButton]}
-            onPress={() => Alert.alert('Coming Soon', 'Group events feature will be available soon!')}
-          >
-            <Ionicons name="people-outline" size={24} color="white" />
-            <Text style={styles.actionButtonText}>Create Group Event</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Main Content Container */}
+        <View style={styles.mainContent}>
+          {/* Action Buttons */}
+          <View style={[styles.actionButtons, { marginTop: 16 }]}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.primaryButton]}
+              onPress={() => router.push({
+                pathname: '/logActivity',
+                params: { id: activity.id, name: activity.name }
+              })}
+            >
+              <Ionicons name="add-circle-outline" size={24} color="white" />
+              <Text style={styles.actionButtonText}>Log Activity</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.secondaryButton]}
+              onPress={() => router.push({
+                pathname: '/createGroupEvent',
+                params: { activityId: activity.id }
+              })}
+            >
+              <Ionicons name="people-outline" size={24} color="white" />
+              <Text style={styles.actionButtonText}>Create Group Event</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Description Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>About</Text>
-          <Text style={styles.description}>{activity.description}</Text>
-        </View>
+          {/* Description Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>About</Text>
+            <Text style={styles.description}>{activity.description}</Text>
+          </View>
 
-        {/* Statistics */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Statistics</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statsItem}>
-              <Text style={styles.statsValue}>{stats.totalSessions}</Text>
-              <Text style={styles.statsLabel}>Total Sessions</Text>
-            </View>
-            <View style={styles.statsItem}>
-              <Text style={styles.statsValue}>{stats.averageDuration}m</Text>
-              <Text style={styles.statsLabel}>Avg Duration</Text>
-            </View>
-            <View style={styles.statsItem}>
-              <Text style={styles.statsValue}>{stats.totalDistance}km</Text>
-              <Text style={styles.statsLabel}>Total Distance</Text>
+          {/* Statistics */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Statistics</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.statsItem}>
+                <Text style={styles.statsValue}>{stats.totalSessions}</Text>
+                <Text style={styles.statsLabel}>Total Sessions</Text>
+              </View>
+              <View style={styles.statsItem}>
+                <Text style={styles.statsValue}>{stats.averageDuration}m</Text>
+                <Text style={styles.statsLabel}>Avg Duration</Text>
+              </View>
+              <View style={styles.statsItem}>
+                <Text style={styles.statsValue}>{stats.totalDistance}km</Text>
+                <Text style={styles.statsLabel}>Total Distance</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Recent History */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Recent History</Text>
-          {activityLogs.length === 0 ? (
-            <View style={styles.emptyStateContainer}>
-              <Ionicons name="document-text-outline" size={48} color="#ccc" />
-              <Text style={styles.emptyStateTitle}>No activity logs yet</Text>
-              <Text style={styles.emptyStateMessage}>Start logging your activities to see them here</Text>
-            </View>
-          ) : (
-            activityLogs.map((log) => (
-              <TouchableOpacity 
-                key={log.id} 
-                style={styles.historyItem}
-                onPress={() => router.push({
-                  pathname: '/activityLogDetail',
-                  params: { id: log.id }
-                })}
-              >
-                <View style={styles.historyHeader}>
-                  <Text style={styles.historyDate}>
-                    {new Date(log.date).toLocaleDateString()}
-                  </Text>
-                  <View style={styles.historyMeta}>
-                    <Ionicons name="time-outline" size={16} color="#666" />
-                    <Text style={styles.historyMetaText}>{log.duration}m</Text>
-                    {log.distance && (
-                      <>
-                        <Ionicons name="map-outline" size={16} color="#666" />
-                        <Text style={styles.historyMetaText}>{log.distance}km</Text>
-                      </>
-                    )}
+          {/* Recent History */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Recent History</Text>
+            {activityLogs.length === 0 ? (
+              <View style={styles.emptyStateContainer}>
+                <Ionicons name="document-text-outline" size={48} color="#ccc" />
+                <Text style={styles.emptyStateTitle}>No activity logs yet</Text>
+                <Text style={styles.emptyStateMessage}>Start logging your activities to see them here</Text>
+              </View>
+            ) : (
+              activityLogs.map((log) => (
+                <TouchableOpacity 
+                  key={log.id} 
+                  style={styles.historyItem}
+                  onPress={() => router.push({
+                    pathname: '/activityLogDetail',
+                    params: { id: log.id }
+                  })}
+                >
+                  <View style={styles.historyHeader}>
+                    <Text style={styles.historyDate}>
+                      {new Date(log.date).toLocaleDateString()}
+                    </Text>
+                    <View style={styles.historyMeta}>
+                      <Ionicons name="time-outline" size={16} color="#666" />
+                      <Text style={styles.historyMetaText}>{log.duration}m</Text>
+                      {log.distance && (
+                        <>
+                          <Ionicons name="map-outline" size={16} color="#666" />
+                          <Text style={styles.historyMetaText}>{log.distance}km</Text>
+                        </>
+                      )}
+                    </View>
                   </View>
-                </View>
-                {log.notes && (
-                  <Text style={styles.historyNotes} numberOfLines={2}>{log.notes}</Text>
-                )}
-              </TouchableOpacity>
-            ))
-          )}
+                  {log.notes && (
+                    <Text style={styles.historyNotes} numberOfLines={2}>{log.notes}</Text>
+                  )}
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -289,30 +311,65 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer: {
-    height: 140,
+    height: 280,
+    position: 'relative',
   },
   headerGradient: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'flex-end',
   },
   headerContent: {
     alignItems: 'center',
+    paddingBottom: 40,
+    paddingTop: 80,
+  },
+  headerIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 12,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  categoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
   },
   headerCategory: {
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.9)',
-    marginTop: 8,
+    fontSize: 16,
+    color: 'white',
+    textTransform: 'capitalize',
+    fontWeight: '500',
+  },
+  mainContent: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -24,
+    paddingTop: 8,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -324,15 +381,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 16,
     gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
   },
   primaryButton: {
     backgroundColor: '#4B7BF5',
   },
   secondaryButton: {
-    backgroundColor: '#2E5BDB',
+    backgroundColor: '#4CAF50',
   },
   actionButtonText: {
     color: 'white',
@@ -424,28 +486,6 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 8,
   },
-  emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    marginVertical: 10,
-  },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 12,
-  },
-  emptyStateMessage: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -455,225 +495,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  headerContainer: {
-    height: 320,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  headerGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  headerIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  headerContent: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  headerTitle: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 8,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  headerCategory: {
-    fontSize: 18,
-    color: 'white',
-    opacity: 0.9,
-    textTransform: 'capitalize',
-    textAlign: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  animatedHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    zIndex: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  headerBackButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  animatedHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 10,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-    marginTop: 8,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 16,
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  primaryButton: {
-    backgroundColor: '#4B7BF5',
-  },
-  secondaryButton: {
-    backgroundColor: '#4CAF50',
-  },
-  actionButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  card: {
-    backgroundColor: 'white',
-    margin: 16,
-    padding: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#EEEEEE',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#1A1A1A',
-  },
-  description: {
-    fontSize: 16,
-    color: '#666',
-    lineHeight: 24,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    margin: 16,
-    gap: 16,
-    marginBottom: 8,
-  },
-  statsItem: {
-    flex: 1,
-    minWidth: '40%',
-    backgroundColor: '#F8F9FA',
-    padding: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  statsNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4B7BF5',
-    marginBottom: 4,
-  },
-  statsLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  historyItem: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    marginBottom: 2,
-  },
-  historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  historyDate: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1A1A1A',
-  },
-  historyMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  historyMetaText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  historyNotes: {
-    fontSize: 14,
     color: '#666',
   },
 });
