@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
 import { Input, Button } from '@rneui/themed';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { GoogleSignin, GoogleSigninButton, statusCodes } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,6 +15,7 @@ const Authentication = () => {
   const router = useRouter();
 
   useEffect(() => {
+    configureGoogleSignIn();
     const checkAppleAuthAvailability = async () => {
       try {
         const isAvailable = await AppleAuthentication.isAvailableAsync();
@@ -29,6 +31,41 @@ const Authentication = () => {
     }
   }, []);
 
+  const configureGoogleSignIn = async () => {
+    try {
+      await GoogleSignin.configure({
+        webClientId: 'YOUR_WEB_CLIENT_ID', // required for Android and iOS 
+        iosClientId: 'YOUR_IOS_CLIENT_ID', // required for iOS only
+      });
+    } catch (error: any) {
+      console.error("Google Sign-in configuration error:", error.message);
+    }
+  };
+  
+  const signInWithGoogle = async () => {
+    try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const userInfo = await GoogleSignin.signIn();
+      console.log('User info:', userInfo);
+      // Handle user information (e.g., store it, navigate to the next screen)
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled the sign-in flow
+        console.log('User cancelled sign in');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // Operation (e.g. sign in) is in progress already
+        console.log('Sign in is in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        // Play services not available or outdated
+        console.log('Play services not available');
+      } else {
+        // Some other error happened
+        console.error('Google Sign-in error:', error.message);
+      }
+    }
+  };
+
+  
   const handleProfileCheck = async (userId: string) => {
     try {
       console.log('Checking profile for user:', userId);
@@ -181,6 +218,11 @@ const Authentication = () => {
               />
             </>
           )}
+            <GoogleSigninButton
+      size={GoogleSigninButton.Size.Wide}
+      color={GoogleSigninButton.Color.Dark}
+      onPress={signInWithGoogle}
+    />  
         </View>
       </ScrollView>
     </LinearGradient>
