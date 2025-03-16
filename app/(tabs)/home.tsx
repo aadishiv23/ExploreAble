@@ -189,6 +189,33 @@ const HomeScreen = () => {
       <ScrollView style={styles.scrollView}>
         <DailyUpdateCard />
 
+        {/* Feed Section */}
+        <View style={styles.feedSection}>
+          <View style={styles.feedHeader}>
+            <Text style={styles.sectionTitle}>Feed</Text>
+            <TouchableOpacity 
+              onPress={() => router.push('/feed')}
+              style={styles.viewAllButton}
+            >
+              <Text style={styles.viewAllText}>View All</Text>
+              <Ionicons name="chevron-forward" size={16} color="#4B7BF5" />
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.createPostButton}
+            onPress={() => router.push('/createPost')}
+          >
+            <View style={styles.createPostContent}>
+              <View style={styles.createPostAvatar}>
+                <Ionicons name="person" size={20} color="#fff" />
+              </View>
+              <Text style={styles.createPostText}>Share what you're up to...</Text>
+            </View>
+            <Ionicons name="add-circle" size={24} color="#4B7BF5" />
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.quickStartSection}>
           <Text style={styles.sectionTitle}>Quick Start</Text>
           <View style={styles.quickStartGrid}>
@@ -436,6 +463,59 @@ const styles = StyleSheet.create({
   featureTagText: {
     fontSize: 14,
     color: '#666',
+  },
+  feedSection: {
+    marginTop: 20,
+    paddingHorizontal: 16,
+  },
+  feedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: '#4B7BF5',
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  createPostButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  createPostContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  createPostAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#4B7BF5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  createPostText: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
