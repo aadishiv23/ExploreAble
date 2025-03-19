@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { RelativePathString, useRouter } from 'expo-router';
 import AppGradient from '@/components/AppGradient';
 
 interface Event {
@@ -172,7 +172,7 @@ const HomeScreen = () => {
 
   const handleActivitySelect = (activity: typeof ACTIVITY_OPTIONS[0]) => {
     router.push({
-      pathname: '/activitiesByType',
+      pathname: '/activitiesByType' as RelativePathString,
       params: { 
         type: activity.id,
         name: activity.name
@@ -181,7 +181,7 @@ const HomeScreen = () => {
   };
 
   const handleEventPress = (eventId: string) => {
-    router.push(`/eventDetail?id=${eventId}`);
+    router.push(`/eventDetail?id=${eventId}` as RelativePathString);
   };
 
   return (
@@ -194,7 +194,7 @@ const HomeScreen = () => {
           <View style={styles.feedHeader}>
             <Text style={styles.sectionTitle}>Feed</Text>
             <TouchableOpacity 
-              onPress={() => router.push('/feed')}
+              onPress={() => router.push('/feed' as RelativePathString)}
               style={styles.viewAllButton}
             >
               <Text style={styles.viewAllText}>View All</Text>
@@ -204,7 +204,7 @@ const HomeScreen = () => {
           
           <TouchableOpacity 
             style={styles.createPostButton}
-            onPress={() => router.push('/createPost')}
+            onPress={() => router.push('/createPost' as RelativePathString)}
           >
             <View style={styles.createPostContent}>
               <View style={styles.createPostAvatar}>
