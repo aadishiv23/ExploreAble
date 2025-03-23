@@ -25,7 +25,6 @@ interface Comment {
   user: {
     id: string;
     name: string;
-    pfpUrl: string | null;
   };
 }
 
@@ -51,8 +50,7 @@ export default function CommentsScreen() {
           *,
           user:user_id (
             id,
-            name,
-            pfpUrl:avatar_url
+            name
           )
         `)
         .eq('post_id', postId)
@@ -87,8 +85,7 @@ export default function CommentsScreen() {
           *,
           user:user_id (
             id,
-            name,
-            pfpUrl:avatar_url
+            name
           )
         `)
         .single();
@@ -113,13 +110,9 @@ export default function CommentsScreen() {
     return (
       <View style={styles.commentContainer}>
         <View style={styles.commentHeader}>
-          {item.user.pfpUrl ? (
-            <Image source={{ uri: item.user.pfpUrl }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarText}>{item.user.name[0]}</Text>
-            </View>
-          )}
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <Text style={styles.avatarText}>{item.user.name[0]}</Text>
+          </View>
           <View style={styles.commentInfo}>
             <Text style={styles.userName}>{item.user.name}</Text>
             <Text style={styles.commentDate}>{formattedDate}</Text>

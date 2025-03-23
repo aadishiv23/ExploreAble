@@ -9,17 +9,23 @@ interface Post {
   id: string;
   user_id: string;
   content: string;
-  image_url: string | null;
+  content_type: 'activity_post' | 'community_event';
   activity_id: string | null;
+  event_id: string | null;
+  is_focus: boolean;
   created_at: string;
   user: {
     id: string;
     name: string;
-    pfpUrl: string | null;
   };
   activity: {
     name: string;
     category: string;
+  } | null;
+  event: {
+    title: string;
+    location: string;
+    date: string;
   } | null;
   likes_count: number;
   comments_count: number;
@@ -45,18 +51,31 @@ export default function FeedScreen() {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
-          user:user_id (
+          id,
+          user_id,
+          content,
+          content_type,
+          activity_id,
+          event_id,
+          is_focus,
+          created_at,
+          likes_count,
+          comments_count,
+          profiles!inner (
             id,
-            name,
-            pfpUrl:avatar_url
+            name
           ),
-          activity:activity_id (
+          activities (
             name,
             category
           ),
-          participants:post_participants (
-            user:user_id (
+          community_events (
+            title,
+            location,
+            date
+          ),
+          post_participants (
+            profiles!inner (
               id,
               name
             )
@@ -64,21 +83,40 @@ export default function FeedScreen() {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       // Transform the data to match our Post interface
       const transformedPosts: Post[] = (data || []).map((post: any) => ({
         id: post.id,
         user_id: post.user_id,
         content: post.content,
-        image_url: post.image_url,
+        content_type: post.content_type,
         activity_id: post.activity_id,
+        event_id: post.event_id,
+        is_focus: post.is_focus,
         created_at: post.created_at,
-        user: post.user,
-        activity: post.activity,
+        user: {
+          id: post.profiles.id,
+          name: post.profiles.name
+        },
+        activity: post.activities ? {
+          name: post.activities.name,
+          category: post.activities.category
+        } : null,
+        event: post.community_events ? {
+          title: post.community_events.title,
+          location: post.community_events.location,
+          date: post.community_events.date
+        } : null,
         likes_count: post.likes_count || 0,
         comments_count: post.comments_count || 0,
-        participants: post.participants?.map((p: any) => p.user) || []
+        participants: post.post_participants?.map((p: any) => ({
+          id: p.profiles.id,
+          name: p.profiles.name
+        })) || []
       }));
 
       setPosts(transformedPosts);
@@ -112,13 +150,9 @@ export default function FeedScreen() {
       <View style={styles.postCard}>
         <View style={styles.postHeader}>
           <View style={styles.userInfo}>
-            {item.user.pfpUrl ? (
-              <Image source={{ uri: item.user.pfpUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Text style={styles.avatarText}>{item.user.name[0]}</Text>
-              </View>
-            )}
+            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+              <Text style={styles.avatarText}>{item.user.name[0]}</Text>
+            </View>
             <View>
               <Text style={styles.userName}>{item.user.name}</Text>
               <Text style={styles.postDate}>{formattedDate}</Text>
@@ -126,24 +160,35 @@ export default function FeedScreen() {
           </View>
         </View>
 
-        {item.activity && (
-          <View style={styles.activityTag}>
+        {item.content_type === 'activity_post' && item.activity && (
+          <View style={[styles.activityTag, item.is_focus && styles.focusedActivityTag]}>
             <Ionicons 
               name={item.activity.category === 'running' ? 'fitness' : 
                     item.activity.category === 'cycling' ? 'bicycle' : 
                     item.activity.category === 'walking' ? 'walk' : 'body'} 
               size={16} 
-              color="#4B7BF5" 
+              color={item.is_focus ? '#fff' : '#4B7BF5'} 
             />
-            <Text style={styles.activityText}>{item.activity.name}</Text>
+            <Text style={[styles.activityText, item.is_focus && styles.focusedActivityText]}>
+              {item.activity.name}
+              {item.is_focus && ' (Focused)'}
+            </Text>
+          </View>
+        )}
+
+        {item.content_type === 'community_event' && item.event && (
+          <View style={styles.eventTag}>
+            <Ionicons name="calendar" size={16} color="#FF9800" />
+            <View style={styles.eventInfo}>
+              <Text style={styles.eventTitle}>{item.event.title}</Text>
+              <Text style={styles.eventDetails}>
+                {item.event.location} • {format(new Date(item.event.date), 'MMM d, yyyy')}
+              </Text>
+            </View>
           </View>
         )}
 
         <Text style={styles.postContent}>{item.content}</Text>
-
-        {item.image_url && (
-          <Image source={{ uri: item.image_url }} style={styles.postImage} />
-        )}
 
         {item.participants.length > 0 && (
           <View style={styles.participantsContainer}>
@@ -304,21 +349,44 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 12,
   },
+  focusedActivityTag: {
+    backgroundColor: '#4CAF50',
+  },
   activityText: {
     fontSize: 14,
     color: '#4B7BF5',
     marginLeft: 6,
   },
+  focusedActivityText: {
+    color: '#fff',
+  },
+  eventTag: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  eventInfo: {
+    marginLeft: 6,
+    flex: 1,
+  },
+  eventTitle: {
+    fontSize: 14,
+    color: '#FF9800',
+    fontWeight: '600',
+  },
+  eventDetails: {
+    fontSize: 12,
+    color: '#FF9800',
+    marginTop: 2,
+  },
   postContent: {
     fontSize: 16,
     color: '#333',
     lineHeight: 24,
-    marginBottom: 12,
-  },
-  postImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
     marginBottom: 12,
   },
   participantsContainer: {

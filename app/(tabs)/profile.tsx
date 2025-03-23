@@ -34,7 +34,6 @@ interface Profile {
   age: number | null;
   gender: string | null;
   disability: string | null;
-  pfpUrl: string | null;
 }
 
 interface FriendRequest {
@@ -350,6 +349,17 @@ export default function ProfileScreen() {
     </Modal>
   );
 
+  const renderProfileHeader = () => {
+    return (
+      <View style={styles.profileHeader}>
+        <View style={[styles.avatar, styles.avatarPlaceholder]}>
+          <Text style={styles.avatarText}>{profile?.name?.[0] || '?'}</Text>
+        </View>
+        <Text style={styles.name}>{profile?.name || 'Loading...'}</Text>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -373,22 +383,7 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            {profile?.pfpUrl ? (
-              <Image
-                source={{ uri: profile.pfpUrl }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Ionicons name="person" size={40} color="#fff" />
-              </View>
-            )}
-          </View>
-          <Text style={styles.name}>{profile?.name || 'Anonymous User'}</Text>
-          <Text style={styles.username}>@{profile?.name?.split(' ')[0].toLowerCase() || 'user'}</Text>
-        </View>
+        {renderProfileHeader()}
 
         {/* Stats Section */}
         <View style={styles.statsContainer}>
@@ -507,9 +502,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  avatarContainer: {
-    marginBottom: 16,
-  },
   avatar: {
     width: 100,
     height: 100,
@@ -520,15 +512,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  avatarText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '600',
+  },
   name: {
     fontSize: 24,
     fontWeight: '600',
     color: '#333',
-  },
-  username: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -684,11 +676,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-  },
-  avatarText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
   },
   requestInfo: {
     marginLeft: 12,
